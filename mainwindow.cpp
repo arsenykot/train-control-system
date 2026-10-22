@@ -23,13 +23,19 @@ MainWindow::MainWindow(QWidget *parent)
     auto *layout = new QVBoxLayout(ui->centralwidget);
     auto *controls = new QHBoxLayout;
     layout->addLayout(controls);
-    controls->addWidget(new QLabel("Время: 06:00", this));
+    timeLabel = new QLabel(this);
+    controls->addWidget(timeLabel);
+    updateTime();
     controls->addStretch();
 
     const QStringList buttons = {"Старт", "Пауза", "Шаг +15 мин", "Сброс"};
     for (const QString &text : buttons) {
         auto *button = new QPushButton(text, this);
         button->setEnabled(false);
+        if (text == "Шаг +15 мин") {
+            button->setEnabled(true);
+            connect(button, &QPushButton::clicked, this, &MainWindow::stepSimulation);
+        }
         controls->addWidget(button);
     }
 
@@ -71,6 +77,18 @@ MainWindow::MainWindow(QWidget *parent)
     auto *events = new QListWidget(this);
     events->setMaximumHeight(100);
     layout->addWidget(events);
+}
+
+void MainWindow::stepSimulation()
+{
+    simulation.step();
+    updateTime();
+}
+
+void MainWindow::updateTime()
+{
+    QTime time = QTime(0, 0).addSecs(static_cast<int>(simulation.current_time() * 60));
+    timeLabel->setText("Время: " + time.toString("HH:mm"));
 }
 
 MainWindow::~MainWindow()

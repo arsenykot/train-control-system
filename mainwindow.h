@@ -2,8 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "simulation.h"
 
 QT_BEGIN_NAMESPACE
+class QLabel;
 namespace Ui {
 class MainWindow;
 }
@@ -19,5 +21,11 @@ public:
 
 private:
     Ui::MainWindow *ui;
+
+    Simulation simulation;
+
+    QLabel *timeLabel;
+    void stepSimulation();
+    void updateTime();
 };
 #endif // MAINWINDOW_H
