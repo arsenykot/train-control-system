@@ -85,9 +85,10 @@ MainWindow::MainWindow(QWidget *parent)
     updateSchedule();
 
     layout->addWidget(new QLabel("Журнал событий", this));
-    auto *events = new QListWidget(this);
+    events = new QListWidget(this);
     events->setMaximumHeight(100);
     layout->addWidget(events);
+    updateEvents();
 }
 
 void MainWindow::startSimulation()
@@ -108,6 +109,7 @@ void MainWindow::stepSimulation()
     simulation.step();
     updateTime();
     updateTrainPosition();
+    updateEvents();
     if (simulation.finished()) timer->stop();
     updateControls();
 }
@@ -116,9 +118,12 @@ void MainWindow::resetSimulation()
 {
     timer->stop();
     simulation.reset();
+    events->clear();
+    shownEventCount = 0;
     updateTime();
     updateSchedule();
     updateTrainPosition();
+    updateEvents();
     updateControls();
 }
 
@@ -164,6 +169,15 @@ void MainWindow::updateTrainPosition()
     int stationId = route.stop(train.cur_state()).s_id;
     double offsetX = (stationId + train.pos_km() / simulation.segment_length_km) * 110;
     trainItem->setPos(offsetX, 0);
+}
+
+void MainWindow::updateEvents()
+{
+    const auto &log = simulation.log();
+    while (shownEventCount < log.size()) {
+        events->addItem(log[shownEventCount].text);
+        ++shownEventCount;
+    }
 }
 
 void MainWindow::updateControls()

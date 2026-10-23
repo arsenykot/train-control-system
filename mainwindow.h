@@ -7,6 +7,7 @@
 QT_BEGIN_NAMESPACE
 class QGraphicsRectItem;
 class QLabel;
+class QListWidget;
 class QPushButton;
 class QTableWidget;
 class QTimer;
@@ -30,6 +31,8 @@ private:
 
     QLabel *timeLabel;
     QTableWidget *schedule;
+    QListWidget *events;
+    int shownEventCount = 0;
     QGraphicsRectItem *trainItem;
     QTimer *timer;
     QPushButton *startButton;
@@ -42,6 +45,7 @@ private:
     void updateTime();
     void updateSchedule();
     void updateTrainPosition();
+    void updateEvents();
     void updateControls();
 };
 #endif // MAINWINDOW_H
