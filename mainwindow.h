@@ -26,6 +26,7 @@ private:
 
     QLabel *timeLabel;
     void stepSimulation();
+    void resetSimulation();
     void updateTime();
 };
 #endif // MAINWINDOW_H

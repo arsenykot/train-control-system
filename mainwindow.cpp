@@ -35,6 +35,9 @@ MainWindow::MainWindow(QWidget *parent)
         if (text == "Шаг +15 мин") {
             button->setEnabled(true);
             connect(button, &QPushButton::clicked, this, &MainWindow::stepSimulation);
+        } else if (text == "Сброс") {
+            button->setEnabled(true);
+            connect(button, &QPushButton::clicked, this, &MainWindow::resetSimulation);
         }
         controls->addWidget(button);
     }
@@ -82,6 +85,12 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::stepSimulation()
 {
     simulation.step();
+    updateTime();
+}
+
+void MainWindow::resetSimulation()
+{
+    simulation.reset();
     updateTime();
 }
 
