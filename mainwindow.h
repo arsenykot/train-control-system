@@ -5,6 +5,7 @@
 #include "simulation.h"
 
 QT_BEGIN_NAMESPACE
+class QGraphicsRectItem;
 class QLabel;
 class QPushButton;
 class QTableWidget;
@@ -29,6 +30,7 @@ private:
 
     QLabel *timeLabel;
     QTableWidget *schedule;
+    QGraphicsRectItem *trainItem;
     QTimer *timer;
     QPushButton *startButton;
     QPushButton *pauseButton;
@@ -39,6 +41,7 @@ private:
     void resetSimulation();
     void updateTime();
     void updateSchedule();
+    void updateTrainPosition();
     void updateControls();
 };
 #endif // MAINWINDOW_H
