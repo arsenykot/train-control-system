@@ -73,20 +73,14 @@ MainWindow::MainWindow(QWidget *parent)
     scene->addText("Поезд №1")->setPos(10, 10);
 
     layout->addWidget(new QLabel("Расписание", this));
-    auto *schedule = new QTableWidget(7, 3, this);
+    schedule = new QTableWidget(0, 3, this);
     schedule->setHorizontalHeaderLabels({"Станция", "Прибытие", "Отправление"});
     schedule->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     schedule->verticalHeader()->hide();
     schedule->setEditTriggers(QAbstractItemView::NoEditTriggers);
     layout->addWidget(schedule, 1);
 
-    for (int i = 0; i < 7; ++i) {
-        QTime arrival = QTime(6, 15).addSecs((i * 13 - 3) * 60);
-        QTime departure = QTime(6, 15).addSecs(i * 13 * 60);
-        schedule->setItem(i, 0, new QTableWidgetItem("Станция " + QString::number(i + 1)));
-        schedule->setItem(i, 1, new QTableWidgetItem(i == 0 ? "—" : arrival.toString("HH:mm")));
-        schedule->setItem(i, 2, new QTableWidgetItem(i == 6 ? "—" : departure.toString("HH:mm")));
-    }
+    updateSchedule();
 
     layout->addWidget(new QLabel("Журнал событий", this));
     auto *events = new QListWidget(this);
@@ -120,6 +114,7 @@ void MainWindow::resetSimulation()
     timer->stop();
     simulation.reset();
     updateTime();
+    updateSchedule();
     updateControls();
 }
 
@@ -127,6 +122,29 @@ void MainWindow::updateTime()
 {
     QTime time = QTime(0, 0).addSecs(static_cast<int>(simulation.current_time() * 60));
     timeLabel->setText("Время: " + time.toString("HH:mm"));
+}
+
+void MainWindow::updateSchedule()
+{
+    schedule->setRowCount(0);
+    if (simulation.train_count() == 0) return;
+
+    const Route &route = simulation.route(0);
+    schedule->setRowCount(route.stop_cnt());
+
+    for (int i = 0; i < route.stop_cnt(); ++i) {
+        int stationId = route.stop(i).s_id;
+        QTime arrival = QTime(0, 0).addSecs(static_cast<int>(route.p_arr(i) * 60));
+        QTime departure = QTime(0, 0).addSecs(static_cast<int>(route.p_dep(i) * 60));
+        QString arrivalText = "—";
+        QString departureText = "—";
+        if (i > 0) arrivalText = arrival.toString("HH:mm");
+        if (i < route.stop_cnt() - 1) departureText = departure.toString("HH:mm");
+
+        schedule->setItem(i, 0, new QTableWidgetItem(simulation.station(stationId).name()));
+        schedule->setItem(i, 1, new QTableWidgetItem(arrivalText));
+        schedule->setItem(i, 2, new QTableWidgetItem(departureText));
+    }
 }
 
 void MainWindow::updateControls()

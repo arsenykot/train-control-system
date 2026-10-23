@@ -7,6 +7,7 @@
 QT_BEGIN_NAMESPACE
 class QLabel;
 class QPushButton;
+class QTableWidget;
 class QTimer;
 namespace Ui {
 class MainWindow;
@@ -27,6 +28,7 @@ private:
     Simulation simulation;
 
     QLabel *timeLabel;
+    QTableWidget *schedule;
     QTimer *timer;
     QPushButton *startButton;
     QPushButton *pauseButton;
@@ -36,6 +38,7 @@ private:
     void stepSimulation();
     void resetSimulation();
     void updateTime();
+    void updateSchedule();
     void updateControls();
 };
 #endif // MAINWINDOW_H
