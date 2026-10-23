@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QTableWidget>
 #include <QTime>
+#include <QTimer>
 #include <QVBoxLayout>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -28,12 +29,22 @@ MainWindow::MainWindow(QWidget *parent)
     updateTime();
     controls->addStretch();
 
+    timer = new QTimer(this);
+    timer->setInterval(1000);
+    connect(timer, &QTimer::timeout, this, &MainWindow::stepSimulation);
+
     const QStringList buttons = {"Старт", "Пауза", "Шаг +15 мин", "Сброс"};
     for (const QString &text : buttons) {
         auto *button = new QPushButton(text, this);
         button->setEnabled(false);
-        if (text == "Шаг +15 мин") {
-            button->setEnabled(true);
+        if (text == "Старт") {
+            startButton = button;
+            connect(button, &QPushButton::clicked, this, &MainWindow::startSimulation);
+        } else if (text == "Пауза") {
+            pauseButton = button;
+            connect(button, &QPushButton::clicked, this, &MainWindow::pauseSimulation);
+        } else if (text == "Шаг +15 мин") {
+            stepButton = button;
             connect(button, &QPushButton::clicked, this, &MainWindow::stepSimulation);
         } else if (text == "Сброс") {
             button->setEnabled(true);
@@ -41,6 +52,7 @@ MainWindow::MainWindow(QWidget *parent)
         }
         controls->addWidget(button);
     }
+    updateControls();
 
     layout->addWidget(new QLabel("Схема участка", this));
     auto *scene = new QGraphicsScene(this);
@@ -82,22 +94,56 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(events);
 }
 
+void MainWindow::startSimulation()
+{
+    if (simulation.finished()) return;
+    timer->start();
+    updateControls();
+}
+
+void MainWindow::pauseSimulation()
+{
+    timer->stop();
+    updateControls();
+}
+
 void MainWindow::stepSimulation()
 {
     simulation.step();
     updateTime();
+    if (simulation.finished()) timer->stop();
+    updateControls();
 }
 
 void MainWindow::resetSimulation()
 {
+    timer->stop();
     simulation.reset();
     updateTime();
+    updateControls();
 }
 
 void MainWindow::updateTime()
 {
     QTime time = QTime(0, 0).addSecs(static_cast<int>(simulation.current_time() * 60));
     timeLabel->setText("Время: " + time.toString("HH:mm"));
+}
+
+void MainWindow::updateControls()
+{
+    if (timer->isActive()) {
+        startButton->setEnabled(false);
+        pauseButton->setEnabled(true);
+        stepButton->setEnabled(false);
+    } else if (simulation.finished()) {
+        startButton->setEnabled(false);
+        pauseButton->setEnabled(false);
+        stepButton->setEnabled(false);
+    } else {
+        startButton->setEnabled(true);
+        pauseButton->setEnabled(false);
+        stepButton->setEnabled(true);
+    }
 }
 
 MainWindow::~MainWindow()
