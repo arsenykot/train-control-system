@@ -6,6 +6,7 @@
 #include "simulation.h"
 
 QT_BEGIN_NAMESPACE
+class QComboBox;
 class QGraphicsRectItem;
 class QGraphicsScene;
 class QGraphicsView;
@@ -34,6 +35,8 @@ private:
 
     QLabel *timeLabel;
     QTableWidget *schedule;
+    QComboBox *trainSelector;
+    int selectedTrain = 0;
     QListWidget *events;
     int shownEventCount = 0;
     QGraphicsScene *scene;
@@ -48,6 +51,8 @@ private:
     void stepSimulation();
     void resetSimulation();
     void updateTime();
+    void selectTrain(int index);
+    void updateTrainSelector();
     void updateSchedule();
     void createTrainItems();
     void updateTrainPositions();

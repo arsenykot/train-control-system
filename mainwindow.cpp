@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QComboBox>
 #include <QGraphicsRectItem>
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
@@ -72,7 +73,15 @@ MainWindow::MainWindow(QWidget *parent)
     createTrainItems();
     updateTrainPositions();
 
-    layout->addWidget(new QLabel("Расписание", this));
+    auto *scheduleHeader = new QHBoxLayout;
+    scheduleHeader->addWidget(new QLabel("Расписание", this));
+    trainSelector = new QComboBox(this);
+    scheduleHeader->addWidget(trainSelector);
+    scheduleHeader->addStretch();
+    layout->addLayout(scheduleHeader);
+    connect(trainSelector, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::selectTrain);
+
     schedule = new QTableWidget(0, 3, this);
     schedule->setHorizontalHeaderLabels({"Станция", "Прибытие", "Отправление"});
     schedule->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -80,6 +89,7 @@ MainWindow::MainWindow(QWidget *parent)
     schedule->setEditTriggers(QAbstractItemView::NoEditTriggers);
     layout->addWidget(schedule, 1);
 
+    updateTrainSelector();
     updateSchedule();
 
     layout->addWidget(new QLabel("Журнал событий", this));
@@ -116,6 +126,7 @@ void MainWindow::resetSimulation()
 {
     timer->stop();
     simulation.reset();
+    updateTrainSelector();
     events->clear();
     shownEventCount = 0;
     updateTime();
@@ -132,12 +143,36 @@ void MainWindow::updateTime()
     timeLabel->setText("Время: " + time.toString("HH:mm"));
 }
 
+void MainWindow::selectTrain(int index)
+{
+    selectedTrain = index;
+    updateSchedule();
+}
+
+void MainWindow::updateTrainSelector()
+{
+    trainSelector->blockSignals(true);
+    trainSelector->clear();
+    for (int i = 0; i < simulation.train_count(); ++i) {
+        trainSelector->addItem("Поезд №" + QString::number(simulation.train(i).id() + 1));
+    }
+
+    if (simulation.train_count() == 0) {
+        selectedTrain = -1;
+    } else if (selectedTrain < 0 || selectedTrain >= simulation.train_count()) {
+        selectedTrain = 0;
+    }
+    trainSelector->setCurrentIndex(selectedTrain);
+    trainSelector->setEnabled(simulation.train_count() > 0);
+    trainSelector->blockSignals(false);
+}
+
 void MainWindow::updateSchedule()
 {
     schedule->setRowCount(0);
-    if (simulation.train_count() == 0) return;
+    if (selectedTrain < 0 || selectedTrain >= simulation.train_count()) return;
 
-    const Route &route = simulation.route(0);
+    const Route &route = simulation.route(selectedTrain);
     schedule->setRowCount(route.stop_cnt());
 
     for (int i = 0; i < route.stop_cnt(); ++i) {
