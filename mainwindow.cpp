@@ -3,6 +3,7 @@
 
 #include <QGraphicsRectItem>
 #include <QGraphicsScene>
+#include <QGraphicsSimpleTextItem>
 #include <QGraphicsTextItem>
 #include <QGraphicsView>
 #include <QHeaderView>
@@ -56,10 +57,8 @@ MainWindow::MainWindow(QWidget *parent)
     updateControls();
 
     layout->addWidget(new QLabel("Схема участка", this));
-    auto *scene = new QGraphicsScene(this);
-    auto *view = new QGraphicsView(scene, this);
-    scene->setSceneRect(0, 0, 740, 130);
-    view->setMinimumHeight(170);
+    scene = new QGraphicsScene(this);
+    view = new QGraphicsView(scene, this);
     layout->addWidget(view);
 
     scene->addLine(40, 70, 700, 70, QPen(Qt::darkGray, 3));
@@ -70,9 +69,8 @@ MainWindow::MainWindow(QWidget *parent)
         name->setPos(x - name->boundingRect().width() / 2, 85);
     }
 
-    trainItem = scene->addRect(25, 40, 30, 18, QPen(Qt::blue), QBrush(Qt::blue));
-    updateTrainPosition();
-    scene->addText("Поезд №1")->setPos(10, 10);
+    createTrainItems();
+    updateTrainPositions();
 
     layout->addWidget(new QLabel("Расписание", this));
     schedule = new QTableWidget(0, 3, this);
@@ -108,7 +106,7 @@ void MainWindow::stepSimulation()
 {
     simulation.step();
     updateTime();
-    updateTrainPosition();
+    updateTrainPositions();
     updateEvents();
     if (simulation.finished()) timer->stop();
     updateControls();
@@ -122,7 +120,8 @@ void MainWindow::resetSimulation()
     shownEventCount = 0;
     updateTime();
     updateSchedule();
-    updateTrainPosition();
+    createTrainItems();
+    updateTrainPositions();
     updateEvents();
     updateControls();
 }
@@ -156,19 +155,37 @@ void MainWindow::updateSchedule()
     }
 }
 
-void MainWindow::updateTrainPosition()
+void MainWindow::createTrainItems()
 {
-    if (simulation.train_count() == 0) {
-        trainItem->hide();
-        return;
+    for (auto *item : trainItems) {
+        delete item;
     }
-    trainItem->show();
+    trainItems.clear();
 
-    const Train &train = simulation.train(0);
-    const Route &route = simulation.route(0);
-    int stationId = route.stop(train.cur_state()).s_id;
-    double offsetX = (stationId + train.pos_km() / simulation.segment_length_km) * 110;
-    trainItem->setPos(offsetX, 0);
+    for (int i = 0; i < simulation.train_count(); ++i) {
+        auto *item = scene->addRect(25, 40, 30, 18, QPen(Qt::blue), QBrush(Qt::blue));
+        auto *number = new QGraphicsSimpleTextItem(QString::number(simulation.train(i).id() + 1), item);
+        number->setBrush(Qt::white);
+        number->setPos(40 - number->boundingRect().width() / 2,
+                       49 - number->boundingRect().height() / 2);
+        trainItems.append(item);
+    }
+
+    int extraHeight = 0;
+    if (simulation.train_count() > 1) extraHeight = (simulation.train_count() - 1) * 24;
+    scene->setSceneRect(0, -extraHeight, 740, 130 + extraHeight);
+    view->setMinimumHeight(170 + extraHeight);
+}
+
+void MainWindow::updateTrainPositions()
+{
+    for (int i = 0; i < trainItems.size(); ++i) {
+        const Train &train = simulation.train(i);
+        const Route &route = simulation.route(i);
+        int stationId = route.stop(train.cur_state()).s_id;
+        double offsetX = (stationId + train.pos_km() / simulation.segment_length_km) * 110;
+        trainItems[i]->setPos(offsetX, -i * 24);
+    }
 }
 
 void MainWindow::updateEvents()

@@ -2,10 +2,13 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QVector>
 #include "simulation.h"
 
 QT_BEGIN_NAMESPACE
 class QGraphicsRectItem;
+class QGraphicsScene;
+class QGraphicsView;
 class QLabel;
 class QListWidget;
 class QPushButton;
@@ -33,7 +36,9 @@ private:
     QTableWidget *schedule;
     QListWidget *events;
     int shownEventCount = 0;
-    QGraphicsRectItem *trainItem;
+    QGraphicsScene *scene;
+    QGraphicsView *view;
+    QVector<QGraphicsRectItem *> trainItems;
     QTimer *timer;
     QPushButton *startButton;
     QPushButton *pauseButton;
@@ -44,7 +49,8 @@ private:
     void resetSimulation();
     void updateTime();
     void updateSchedule();
-    void updateTrainPosition();
+    void createTrainItems();
+    void updateTrainPositions();
     void updateEvents();
     void updateControls();
 };
