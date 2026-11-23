@@ -2,8 +2,19 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QVector>
+#include "simulation.h"
 
 QT_BEGIN_NAMESPACE
+class QComboBox;
+class QGraphicsRectItem;
+class QGraphicsScene;
+class QGraphicsView;
+class QLabel;
+class QListWidget;
+class QPushButton;
+class QTableWidget;
+class QTimer;
 namespace Ui {
 class MainWindow;
 }
@@ -19,5 +30,33 @@ public:
 
 private:
     Ui::MainWindow *ui;
+
+    Simulation simulation;
+
+    QLabel *timeLabel;
+    QTableWidget *schedule;
+    QComboBox *trainSelector;
+    int selectedTrain = 0;
+    QListWidget *events;
+    int shownEventCount = 0;
+    QGraphicsScene *scene;
+    QGraphicsView *view;
+    QVector<QGraphicsRectItem *> trainItems;
+    QTimer *timer;
+    QPushButton *startButton;
+    QPushButton *pauseButton;
+    QPushButton *stepButton;
+    void startSimulation();
+    void pauseSimulation();
+    void stepSimulation();
+    void resetSimulation();
+    void updateTime();
+    void selectTrain(int index);
+    void updateTrainSelector();
+    void updateSchedule();
+    void createTrainItems();
+    void updateTrainPositions();
+    void updateEvents();
+    void updateControls();
 };
 #endif // MAINWINDOW_H
