@@ -11,6 +11,7 @@
 #include <QLabel>
 #include <QListWidget>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QTableWidget>
 #include <QTime>
 #include <QTimer>
@@ -25,9 +26,13 @@ MainWindow::MainWindow(QWidget *parent)
     setMinimumSize(800, 600);
 
     auto *layout = new QVBoxLayout(ui->centralwidget);
+    layout->setContentsMargins(24, 20, 24, 20);
+    layout->setSpacing(12);
+    layout->setSizeConstraint(QLayout::SetMinimumSize);
     auto *controls = new QHBoxLayout;
     layout->addLayout(controls);
     timeLabel = new QLabel(this);
+    timeLabel->setObjectName("simulationClock");
     controls->addWidget(timeLabel);
     updateTime();
     controls->addStretch();
@@ -42,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent)
         button->setEnabled(false);
         if (text == "Старт") {
             startButton = button;
+            startButton->setObjectName("startButton");
             connect(button, &QPushButton::clicked, this, &MainWindow::startSimulation);
         } else if (text == "Пауза") {
             pauseButton = button;
@@ -60,6 +66,8 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(new QLabel("Схема участка", this));
     scene = new QGraphicsScene(this);
     view = new QGraphicsView(scene, this);
+    view->setBackgroundBrush(Qt::white);
+    view->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     layout->addWidget(view);
 
     scene->addLine(40, 70, 700, 70, QPen(Qt::darkGray, 3));
@@ -85,8 +93,10 @@ MainWindow::MainWindow(QWidget *parent)
     schedule = new QTableWidget(0, 3, this);
     schedule->setHorizontalHeaderLabels({"Станция", "Прибытие", "Отправление"});
     schedule->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    schedule->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     schedule->verticalHeader()->hide();
     schedule->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    schedule->setMinimumHeight(200);
     layout->addWidget(schedule, 1);
 
     updateTrainSelector();
@@ -97,6 +107,13 @@ MainWindow::MainWindow(QWidget *parent)
     events->setMaximumHeight(100);
     layout->addWidget(events);
     updateEvents();
+
+    auto *content = takeCentralWidget();
+    auto *workspace = new QScrollArea(this);
+    workspace->setWidgetResizable(true);
+    workspace->setFrameShape(QFrame::NoFrame);
+    workspace->setWidget(content);
+    setCentralWidget(workspace);
 }
 
 void MainWindow::startSimulation()
